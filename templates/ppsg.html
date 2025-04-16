@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}{{post.title}} PPSG {% endblock %}
+{% block headmessage %}
+    <h3 style="font-family:微軟正黑體;">PPSG</h3>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            gap: 10px;
+            justify-content: left;
+        }
+    
+        button {
+            padding: 10px;
+            font-size: 14px;
+            background: lightblue;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    
+        button:hover {
+            background: darkblue;
+            color: white;
+        }
+
+    </style>
+
+    <script>
+        function senddata(){
+            const formData = new FormData();
+            const account = document.getElementById('account').value;
+            const pswd = document.getElementById('pswd').value;
+            const game = document.getElementById('game').value;
+            const environment = document.getElementById('environment').value;
+            const website = document.getElementById('website').value;
+            const fileInput = document.getElementById('excelFile')
+    
+            if (!fileInput.files.length) {
+                alert("請選擇一個檔案");
+                return;
+            }
+
+            for(let i=0; i<fileInput.files.length; i++){
+                formData.append('file[]', fileInput.files[i])
+            }
+
+            formData.append('account', account)
+            formData.append('pswd', pswd)
+            formData.append('game', game)
+            formData.append('environment', environment)
+            formData.append('website', website)
+            
+            $.ajax({
+                url:'/upload/',
+                type:'POST',
+                data:formData,
+                processData:false,
+                contentType:false,
+                success: function(response){
+                    window.location.href = '/ppsgFunctionSelection/';
+                },
+                error: function(xhr, status, error){
+                    alert("上傳失敗，請重新上傳!")
+                }
+            });
+        }
+    </script>
+{% endblock %}
+{% block content %}
+
+    <div>
+        <table>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ account }} <input type="text" id='account'>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ pswd }} <input type="password" id='pswd'>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ website }} 
+                    <select style="text-align-last: center;" id='website'>
+                        <option value="admin">Admin</option>
+                        <option value="agent">Agent</option>
+                        <option value="max222agent">Max222 Agetn</option>
+                        <option value="gcadmin">GCAdmin</option>
+                    </select>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ game }} 
+                    <select id='game'>
+                        <option value="pp">PP</option>
+                        <option value="sg">SG</option>
+                    </select>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ environment }} 
+                    <select id='environment'>
+                        <option value="thor">THOR</option>
+                        <option value="sta1">STA1</option>
+                        <option value="sta2">STA2</option>
+                        <option value="prod">PROD</option>
+                    </select>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    {{ excel }} 
+                    <input type="file" id='excelFile' accept=".xlsx" multiple/>
+                </p>
+            </tr>
+            <tr class="button-group">
+                <td>
+                    <button type="button" onclick="senddata()">登入</button>   
+                </td>
+                <td>
+                    <a style="font-family:微軟正黑體;" href='/'>
+                        <button type="submit">返回</button>
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

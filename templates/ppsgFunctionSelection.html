@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}{{post.title}} PPSG {% endblock %}
+{% block headmessage %}
+    <h3 style="font-family:微軟正黑體;">PPSG</h3>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .admin-container {
+            text-align: left;
+            font-family: 微軟正黑體;
+        }
+    
+        .admin-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            gap: 10px;
+            justify-content: left;
+        }
+    
+        button {
+            padding: 10px;
+            font-size: 14px;
+            background: lightblue;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    
+        button:hover {
+            background: darkblue;
+            color: white;
+        }
+
+        .return-ppsg {
+            text-align: right;
+            font-family: 微軟正黑體;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+        
+    <script>
+        function adminfunction(button){
+            const buttonText = button.innerText.trim();  // 取得按鈕的文字並去除首尾空格
+            const formData = new FormData();
+            formData.append('action', buttonText)
+            $.ajax({
+                url:'/adminfunction/',
+                type:'POST',
+                data:formData,
+                processData:false,
+                contentType:false,
+                success: function(response) {
+                    console.log("成功回應:", response);
+            
+                    if (response.data.length > 0) {
+                        alert("獲取的數據：\n" + response.data.join("\n")); // 顯示 list
+                    } else {
+                        alert("沒有數據");
+                    }
+                },
+                error: function(jqXHR) {
+                    console.log("錯誤回應:", jqXHR.responseText);
+                    alert("操作失敗：" + jqXHR.responseText);
+                }
+            });
+        }
+
+    </script>
+{% endblock %}
+{% block content %}
+<div class="admin-container">
+    <p class="admin-title">Admin</p>
+    <div class="button-group">
+        <button onclick="adminfunction(this)">AC Win Lose</button>
+        <button onclick="adminfunction(this)">Outstanding</button>
+        <button onclick="adminfunction(this)">Game Jackpot</button>
+        <button onclick="adminfunction(this)">Game Transaction</button>
+        <button onclick="adminfunction(this)">Betlimit</button>
+    </div>
+    <p class="admin-title">Agent</p>
+    <div class="button-group">
+        <button>AC Win Lose</button>
+        <button>Outstanding</button>
+    </div>
+    <p class="admin-title">MAX222 Agent</p>
+    <div class="button-group">
+        <button>AC Win Lose</button>
+        <button>Outstanding</button>
+    </div>   
+    <p class="admin-title">GCAdmin</p>
+    <div class="button-group">
+        <button>Game List</button>
+    </div> 
+    <p class="return-ppsg"> 
+        <a style="font-family:微軟正黑體;" href="../game/">
+            <button type="submit">登出</button>
+        </a>
+    </p>    
+</div>
+{% endblock %}
