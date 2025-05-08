@@ -12,8 +12,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from django.http import HttpResponse
-import time
+from io import BytesIO
 from PIL import Image
+import time
 import pytesseract
 import re
 import os
@@ -56,6 +57,8 @@ def ppsg(requset):
 def upload(request):
     global game
     global gamename
+    global environment
+    global uploaded_file
     
     if request.method == 'POST':
         account = request.POST.get('account')
@@ -63,7 +66,7 @@ def upload(request):
         game = request.POST.get('game')
         environment = request.POST.get('environment')
         website = request.POST.get('website')
-        uploaded_file = request.FILES.getlist('file[]')  # 獲取上傳的檔案
+        uploaded_file = request.FILES.getlist('excelFile')  # 獲取上傳的檔案
         gamename = excel_file_name(uploaded_file)
         
         parameters(website, environment, account, pswd)
@@ -213,13 +216,15 @@ def switch_to_frame(frame_name):
 def click_element_xpath(xpath):
     """等待並點擊指定的元素"""
     wait = WebDriverWait(chromeWeb, 10)  # 創建 WebDriverWait 對象
-    result_click_element_xpath = wait.until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
-    return result_click_element_xpath
+    result_click_element_xpath = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+    result_click_element_xpath.click()
+    return 
 
 def click_element_id(id):
     wait = WebDriverWait(chromeWeb, 10)  # 創建 WebDriverWait 對象
-    result_click_element_id = wait.until(EC.element_to_be_clickable((By.ID, id))).click()
-    return result_click_element_id
+    result_click_element_id = wait.until(EC.element_to_be_clickable((By.ID, id)))
+    result_click_element_id.click()
+    return 
 
 def login(account, pswd):
     # 取得驗證碼位置
@@ -336,23 +341,37 @@ def admin_function(request):
         outstandingReportresult = outstandingReport(nowUrl)
         print(outstandingReportresult)
         return HttpResponse(outstandingReportresult)
+    elif action == 'Game Jackpot':
+        gamejackreportresult = GameJackpotReport(nowUrl)
+        print(gamejackreportresult)
+        return HttpResponse(gamejackreportresult)
+    elif action == 'Game Transaction':
+        gametransactionresult = GameTransactionReport(nowUrl)
+        print(gametransactionresult)
+        return HttpResponse(gametransactionresult)
+    elif action == 'Betlimit':
+        betlimittresult = Betlimit(nowUrl)
+        print(betlimittresult)
+        return HttpResponse(betlimittresult)
     else:
         return action
 
 
 def acWinLoseReport(nowUrl):
+    global admin_report_xpath
     if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        admin_report_xpath = '//*[@id="div_leftLink"]/div[5]'
         #thor、sta1、sta2
         switch_to_frame("leftFrame")
         #等待Report可點擊
-        click_element_xpath('//*[@id="div_leftLink"]/div[5]')
+        click_element_xpath(admin_report_xpath)
         
         #等待AC WIN LOSE 可點擊
         try:
             click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[2]/a')
         except:
             #重新點report
-            click_element_xpath('//*[@id="div_leftLink"]/div[5]')
+            click_element_xpath(admin_report_xpath)
             #再點ac win lose
             click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[2]/a')
             
@@ -417,9 +436,14 @@ def outstandingReport(nowUrl):
     if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
         switch_to_frame('leftFrame')
         #點選Report
-        click_element_xpath('//*[@id="div_leftLink"]/div[5]')
-        #點選outstanding
-        click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[12]/a')
+        time.sleep(1)
+        try:
+            click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[12]/a')
+        except:
+            click_element_xpath(admin_report_xpath)
+            #點選outstanding
+            time.sleep(1)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[12]/a')
         switch_to_frame('mainFrame')
         try:
             for i in range(1, 6):
@@ -451,8 +475,348 @@ def outstandingReport(nowUrl):
             out_num += 1
             # x 在 admin_list出現次數是否為1
             if outstanding_admin_options_list.count(x) == 1:
-                print(str(out_num) + ".   " + x + "  -- PASS ")
+                print(f'{str(out_num)}. {x}  -- PASS')
             else:
-                print(str(out_num) + ".   " + x + "  -- FAIL ")  
+                print(f'{str(out_num)}. {x}  -- FAIL')  
     else:
         pass
+    
+def GameJackpotReport(nowUrl):
+    if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        switch_to_frame('leftFrame')
+        time.sleep(1)
+        #點選Game Jack
+        try:
+            click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[17]/a')
+        except:
+            click_element_xpath(admin_report_xpath)
+            time.sleep(1)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[17]/a')
+        switch_to_frame('mainFrame')
+        time.sleep(1)
+        provider = chromeWeb.find_element(By.ID, 'slt_provider')
+        print(f'game：{game}')
+        if game == "PP":
+            Select(provider).select_by_value("22")  # 下拉選單取值 PP
+        else:
+            Select(provider).select_by_value("6")  # 下拉選單取值 SG
+        time.sleep(1)
+        Game_Jackpot_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
+        click_element_xpath('//*[@id="slt_game"]')
+        Game_Jackpot_options_list = Game_Jackpot_GameName.find_elements(By.TAG_NAME, "option")
+        Game_Jackpot_admin_options_list = []
+        for option in Game_Jackpot_options_list:
+            Game_Jackpot_admin_options_list.append(option.text)
+        gj_num = 0
+        print(f'Game_Jackpot_admin_options_list：{Game_Jackpot_admin_options_list}')
+        for x in gamename:
+            gj_num += 1
+            # x 在 admin_list出現次數是否為1
+            if Game_Jackpot_admin_options_list.count(x) == 1:
+                print(f'{str(gj_num)}. {x}  -- PASS')
+            else:
+                print(f'{str(gj_num)}. {x}  -- FAIL')
+    else:
+        pass
+    
+def GameTransactionReport(nowUrl):
+    #thor、sta1、sta2
+    if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        switch_to_frame('leftFrame')
+        #點選到Game Transaction
+        time.sleep(1)
+        try:
+            click_element_xpath('//*[@id="div_leftLink"]/ul[13]/li[7]/a')
+        except:
+            click_element_xpath('//*[@id="div_leftLink"]/div[13]')
+            time.sleep(0.5)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[13]/li[7]/a')
+    #prod
+    elif ('cmdbet' in nowUrl):
+        switch_to_frame('leftFrame')
+        #點選到Game Transaction
+        try:
+            time.sleep(1)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[12]/li[6]/a')
+        except:
+            time.sleep(1)
+            click_element_xpath('//*[@id="div_leftLink"]/div[12]')
+            click_element_xpath('//*[@id="div_leftLink"]/ul[12]/li[6]/a')
+    else:
+        return('url錯誤')
+    
+    switch_to_frame('mainFrame')
+    time.sleep(1)
+    provider = chromeWeb.find_element(By.ID, "slt_provider")
+    if game == "PP":
+        Select(provider).select_by_value("22")  # 下拉選單取值 PP
+    else:
+        Select(provider).select_by_value("6")  # 下拉選單取值 SG
+    Game_Trancsaction_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
+    click_element_xpath('//*[@id="slt_game"]')
+    time.sleep(2)
+    Game_Trancsaction_options_list = Game_Trancsaction_GameName.find_elements(By.TAG_NAME, "option")
+    Game_Trancsaction_admin_options_list = []
+
+    for option in Game_Trancsaction_options_list:
+        Game_Trancsaction_admin_options_list.append(option.text)
+
+    gt_num = 0
+    for x in gamename:
+        gt_num += 1
+        # x 在 admin_list出現次數是否為1
+        if Game_Trancsaction_admin_options_list.count(x) == 1:                                      
+            print(f'{str(gt_num)}. {x}  -- PASS')
+        else:
+            print(f'{str(gt_num)}. {x}  -- FAIL')
+
+def Betlimit(nowUrl):
+    cur = {
+            "AUD": "f1",
+            "CNY": "f2",
+            "EUR": "f4",
+            "GBP": "f5",
+            "HKD": "f6",
+            "IDR": "f7",
+            "JPY": "fy",
+            "KRW": "fw",
+            "MYR": "f3",
+            "SGD": "fx",
+            "USD": "fu",
+            "VD": "fv",
+            "INR": "fi",
+            "BDT": "fo",
+        }
+    if environment == 'thor':
+        cur['THB'] = 'fz'
+    elif environment == 'sta1' or environment == 'sta2':
+        cur['THB'] = 'ft'
+    else:
+        cur = {"USD": "f1"}
+    if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        try:
+            click_element_xpath('//*[@id="div_leftLink"]/div[12]')
+            time.sleep(0.5)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[12]/li[3]/a')
+        except:
+            switch_to_frame('leftFrame')
+            click_element_xpath('//*[@id="div_leftLink"]/div[12]')
+            time.sleep(0.5)
+            click_element_xpath('//*[@id="div_leftLink"]/ul[12]/li[3]/a')
+    else:
+        try:
+            #agent account list
+            click_element_xpath('//*[@id="divLeftBox"]/div[6]')
+            time.sleep(0.5)
+            click_element_xpath('//*[@id="divLeftBox"]/ul[6]/li[2]/a')
+        except:
+            switch_to_frame('leftFrame')
+            click_element_xpath('//*[@id="divLeftBox"]/div[6]')
+            time.sleep(0.5)
+            click_element_xpath('//*[@id="divLeftBox"]/ul[6]/li[2]/a')
+    switch_to_frame('mainFrame')
+    for key, value in cur.items():
+        if environment != "PROD":
+            try:
+                time.sleep(3)
+                select_cur = chromeWeb.find_element(By.ID, "slt_Currency")  # 定位幣別下拉選單
+                Select(select_cur).select_by_value(key)  # 幣別下拉選單取值
+            except:
+                switch_to_frame("mainFrame")
+                time.sleep(3)
+                select_cur = chromeWeb.find_element(By.ID, "slt_Currency")  # 定位幣別下拉選單
+                Select(select_cur).select_by_value(key)  # 幣別下拉選單取值
+            time.sleep(0.5)
+            chromeWeb.find_element(By.ID, "txt_UserName").clear()
+            time.sleep(0.5)
+            chromeWeb.find_element(By.ID, "txt_UserName").send_keys(value)
+            time.sleep(0.5)
+            # 定位submit並點選
+            click_element_xpath('//*[@id="btn_submit"]')
+            time.sleep(3)
+            # 定位PP並點選
+            click_element_xpath("//*[text()='[PP]']")
+            time.sleep(2)
+            chromeWeb.switch_to.window(chromeWeb.window_handles[1])  # 切換視窗
+            time.sleep(0.5)
+            try:
+                # 定位Video Slots的Setting並點選
+                click_element_xpath('//*[@id="tab_bettype"]/tbody/tr[5]/td/a') 
+            except:
+                chromeWeb.close()
+                chromeWeb.switch_to.window(chromeWeb.window_handles[0])
+                time.sleep(0.5)
+                # 定位PP並點選
+                click_element_xpath("//*[text()='[PP]']")
+                chromeWeb.switch_to.window(chromeWeb.window_handles[1])  # 切換視窗
+                # 定位Video Slots的Setting並點選
+                click_element_xpath('//*[@id="tab_bettype"]/tbody/tr[5]/td/a')
+            chromeWeb.maximize_window()  # 放大螢幕
+            adminGameDict = {}  # admin字典
+            # PP Video Stots頁數
+            for x in range(0, 11):
+                if x == 0:
+                    adminGame = adminPage()
+                    adminGameDict = dict(adminGameDict, **adminGame)  # 合併2個Dict
+                else:
+                    try:
+                        ppVideoStotsPagexpath = f"/html/body/div[1]/div[3]/a[{x}]"
+                        click_element_xpath(ppVideoStotsPagexpath)
+                        time.sleep(1)
+                        adminGame = adminPage()
+                        adminGameDict = dict(adminGameDict, **adminGame)  # 合併2個Dict
+                    except:
+                        break
+
+            chromeWeb.close()
+
+            cur_betlimit_dict = {}
+            pp_num = 0
+            minRow = 0
+            maxRow = 0
+            for x in uploaded_file:
+                file_data = x.read()
+                excel = load_workbook(filename=BytesIO(file_data))  # 讀取excel
+                for excelSheet in excel.sheetnames:
+                    pp_num += 1
+                    sheet = excel[excelSheet]  # 對EXCEL切換sheet
+                    excelGame = sheet[1]
+                    pp = excelGame[0].value
+                    for x in range(1, 4):
+                        # 判斷min和max
+                        minMaxcolumn = sheet[2]
+                        minMaxcolumnValue = minMaxcolumn[x].value
+                        if minMaxcolumnValue[0:3] == "Min":
+                            minRow = int(x)
+                        elif minMaxcolumnValue[0:3] == "Max":
+                            maxRow = int(x)
+                        else:
+                            pass
+                    for column in range(3, 30):  # 對EXCEL的1~13行遍歷
+                        cur_range = sheet[column]  # EXCEL該sheet的行數 column=行號
+                        excke_cur = cur_range[0].value
+                        if excke_cur == None:
+                            break
+                        else:
+                            if key == "IDR" and excke_cur == "IDR2":
+                                try:
+                                    # excel文檔最小值 取小數後2位，沒有補0
+                                    min = "%.2f" % cur_range[minRow].value
+                                except:
+                                    min = excelMinBetLimit(sheet, cur_range, minRow)
+                                try:
+                                    # excel文檔最大值 取小數後2位，沒有補0
+                                    max = "%.2f" % cur_range[maxRow].value
+                                except:
+                                    max = excelMaxBetLimit(sheet, cur_range, maxRow)
+
+                                betlimit = f'{min} ~ {max}'
+                                # 加入cur_betlimit_dict字典
+                                cur_betlimit_dict[pp] = betlimit
+                                break
+                            elif key == "VD" and excke_cur == "VND2":
+                                try:
+                                    min = (
+                                        "%.2f" % cur_range[minRow].value
+                                    )  # 抓取excel B欄位
+                                except:
+                                    min = excelMinBetLimit(sheet, cur_range, minRow)
+                                try:
+                                    max = (
+                                        "%.2f" % cur_range[maxRow].value
+                                    )  # 抓取excel C欄位
+                                except:
+                                    max = excelMaxBetLimit(sheet, cur_range, maxRow)
+                                betlimit = f'{min} ~ {max}'
+                                # 加入cur_betlimit_dict字典
+                                cur_betlimit_dict[pp] = betlimit
+                                break
+                            elif excke_cur == key:
+                                try:
+                                    min = (
+                                        "%.2f" % cur_range[minRow].value
+                                    )  # 抓取excel B欄位
+                                except:
+                                    min = excelMinBetLimit(sheet, cur_range, minRow)
+                                try:
+                                    max = (
+                                        "%.2f" % cur_range[maxRow].value
+                                    )  # 抓取excel C欄位
+                                except:
+                                    max = excelMaxBetLimit(sheet, cur_range, maxRow)
+                                betlimit = f'{min} ~ {max}'
+                                # 加入cur_betlimit_dict字典
+                                cur_betlimit_dict[pp] = betlimit
+                                break
+                    try:
+                        # 比對excel的字典和admin字典的pp質是否相同
+                        if cur_betlimit_dict[pp] == adminGameDict[pp] and pp != None:
+                            print(f"{pp_num} :{pp} : {cur_betlimit_dict[pp]}(excel) / {adminGameDict[pp]}(admin) -- Pass ")
+                        elif pp == None:
+                            print(f"{pp_num}內容是空白的")
+                        else:
+                            print(f"{pp_num} :{pp} : {cur_betlimit_dict[pp]}(excel) / {adminGameDict[pp]}(admin) -- Fail")
+                    except:
+                        print(f"{pp_num} :{pp}無{key}資料")
+    
+def excelMinBetLimit(sheet, cur_range, minRow):
+    excelbetLimit = cur_range[minRow].value
+    excelbetLimit = excelbetLimit.replace("=", "")
+    try:
+        minValue = sheet[excelbetLimit].value
+    except:
+        excelbetLimitList = excelbetLimit.split("*")
+        if isinstance(excelbetLimitList[0], int):
+            minValue = sheet[excelbetLimitList[0]].value * int(excelbetLimitList[1])
+        else:
+            try:
+                thisMin = sheet[excelbetLimitList[0]].value
+            except:
+                return 0
+            try:
+                thisMin = thisMin.replace("=", "")
+                minValue = sheet[thisMin].value * int(excelbetLimitList[1])
+            except:
+                minValue = thisMin * int(excelbetLimitList[1])
+    min = "%.2f" % minValue
+    return min
+
+
+def excelMaxBetLimit(sheet, cur_range, maxRow):
+    excelbetLimit = cur_range[maxRow].value
+    excelbetLimit = excelbetLimit.replace("=", "")
+    try:
+        maxValue = sheet[excelbetLimit].value
+    except:
+        excelbetLimitList = excelbetLimit.split("*")
+        if isinstance(excelbetLimitList[0], int):
+            maxValue = sheet[excelbetLimitList[0]].value * int(excelbetLimitList[1])
+        else:
+            try:
+                thisMax = sheet[excelbetLimitList[0]].value
+            except:
+                return 0
+            try:
+                thisMax = thisMax.replace("=", "")
+                maxValue = sheet[thisMax].value * int(excelbetLimitList[1])
+            except:
+                maxValue = thisMax * int(excelbetLimitList[1])
+    max = "%.2f" % maxValue
+    return max
+ 
+def adminPage():
+    cur_dict = {}
+    cur_dict.clear()
+    for num in range(1, 101):  # 遍歷第一頁1~100行，取Game Name 和 Bet Limit
+        try:
+            gameName1 = chromeWeb.find_element(
+                By.XPATH, f'//*[@id="tablelist"]/tbody/tr[{num}]/td[2]'
+            ).text
+            betLimit1 = chromeWeb.find_element(
+                By.XPATH, f'//*[@id="tablelist"]/tbody/tr[{num}]/td[3]'
+            ).text
+        except:
+            break
+        cur_dict[gameName1] = betLimit1  # 取出職加入admin字典
+
+    return cur_dict
