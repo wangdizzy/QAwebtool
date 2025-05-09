@@ -17,7 +17,294 @@ from PIL import Image
 import time
 import pytesseract
 import re
+import logging
 import os
+
+
+
+#log配置
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filename='app.log'
+)
+logger = logging.getLogger(__name__)
+
+#畫面Xpath定義
+class XpathConstants:
+    REPORT_MENU = '//*[@id="div_leftLink"]/div[5]'
+    AC_WIN_LOSE = '//*[@id="div_leftLink"]/ul[5]/li[2]/a'
+    OUTSTANDING = '//*[@id="div_leftLink"]/ul[5]/li[12]/a'
+    GAME_JACKPOT = '//*[@id="div_leftLink"]/ul[5]/li[17]/a'
+    BET = '//*[@id="div_leftLink"]/div[13]'
+    GAME_TRANSACTION = {
+        'default': '//*[@id="div_leftLink"]/ul[13]/li[7]/a',
+        'prod': '//*[@id="div_leftLink"]/ul[12]/li[6]/a'
+    }
+
+#設定檔
+class Config:
+    PROVIDER_VALUES = {
+        'PP' : '22',
+        'SG' : '6'
+    }
+    
+    CURRENCY = {
+        "thor": {
+            "AUD": "f1",
+            "CNY": "f2",
+            "EUR": "f4",
+            "GBP": "f5",
+            "HKD": "f6",
+            "IDR": "f7",
+            "JPY": "fy",
+            "KRW": "fw",
+            "MYR": "f3",
+            "SGD": "fx",
+            "USD": "fu",
+            "VD": "fv",
+            "INR": "fi",
+            "BDT": "fo",
+            "THB": "fz"
+        },
+        "sta": {
+            "AUD": "f1",
+            "CNY": "f2",
+            "EUR": "f4",
+            "GBP": "f5",
+            "HKD": "f6",
+            "IDR": "f7",
+            "JPY": "fy",
+            "KRW": "fw",
+            "MYR": "f3",
+            "SGD": "fx",
+            "USD": "fu",
+            "VD": "fv",
+            "INR": "fi",
+            "BDT": "fo",
+            "THB": "ft"
+        },
+        "prod": {
+            "USD": "f1"
+        }
+    }
+    
+    URL_MAPPING = {
+        ('thor_admin'): 'https://admin.12vin.com/(S(h2uux4srsyv0fwgu3ym2pmti))/default.aspx',
+        ('thor_agent'): 'https://agent.12vin.com/(S(1clf4jfquob2frkapsd1egc3))/default.aspx',
+        ('thor_max222agent'): 'https://max222agent.12vin.com/(S(kqtj2qkkbil4n0wgn5cy0npz))/default.aspx',
+        ('thor_gcadmin'): 'https://gameadmin.12vin.com/',
+        ('sta1_admin'): 'https://admin.vina368.net/(S(eqjgza4zuwutd5y53y50m2w1))/default.aspx',
+        ('sta1_agent'): 'https://cmdbetagent.368aa.net/(S(s0oh1niwwjpjtpdfnu0l0r5b))/default.aspx',
+        ('sta1_max222agent'): 'https://max222agent.vina368.net/(S(ltsyfwcwxej34le5rrkoh2vf))/default.aspx',
+        ('sta1_gcadmin'): 'http://gcadmin.cmdbetsta.com/',
+        ('sta2_admin'): 'https://admin.cmmd368.com/(S(szdtumkbydibusat1o2xqqd1))/default.aspx',
+        ('sta2_agent'): 'https://cmdbetagent.cmmd368.com/(S(2ml21gvm0f0nwr1dkdqewr1j))/default.aspx',
+        ('sta2_max222agent'): 'https://max222agent.cmmd368.com/(S(s5qklauyhfsbuhe5qxlxcd02))/default.aspx',
+        ('sta2_gcadmin'): 'https://gcadmin.cmmd368.com/',
+        ('prod_admin'): 'https://admin.cmdbet.biz/(S(psil03jsmbweb24syq3pbbxi))/default.aspx',
+        ('prod_agent'): 'https://agent.cmdbet.com/(S(xk3u4trawghnzzifbcyd3pib))/default.aspx',
+        ('prod_max222agent'): 'https://agent.max222.com/(S(xdocse1gos51nz2rue5ao1ih))/default.aspx',
+        ('prod_gcadmin'): 'https://gcadmin.cmdbet.biz/'
+    }
+
+class AppState:
+    def __init__(self):
+        self.chromeWeb = None
+        self.game = None
+        self.gamename = None
+        self.environment = None
+        self.uploaded_file = None
+
+app_state = AppState()
+
+#WebDreiver操作
+class WebDriverHelper:
+    def __init__(self, state):
+       self.state = state
+    
+    def open_url(self, url):
+        try:
+            self.state.chromeWeb = webdriver.Chrome(
+                service=ChromeService(ChromeDriverManager().install())
+            )
+            self.state.chromeWeb.maximize_window()
+            self.state.chromeWeb.get(url)
+            logger.info(f'SUCCESS OPEN {url}')
+        except Exception as e:
+            logger.error(f'URL OPEN FAIL:{e}')
+            raise
+    def switch_to_frame(self, frame_name):
+        """切換到指定的框架"""
+        try:
+            self.state.chromeWeb.switch_to.default_content()
+            self.state.chromeWeb.switch_to.frame(frame_name)
+            logger.info(f'SUCCESS SWITCH TO {frame_name}')
+        except Exception as e:
+            logger.error(f'SWITCH {frame_name} FAIL:{e}')
+            raise
+    def click_element_xpath(self, xpath):
+        """等待並點擊指定的元素"""
+        try:
+            wait = WebDriverWait(self.state.chromeWeb, 10)  # 創建 WebDriverWait 對象
+            result_click_element_xpath = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+            result_click_element_xpath.click()
+            logger.error(f'CLICK XPATH [{xpath}] SUEECSS')
+        except Exception as e:
+            logger.error(f'CLICK XPATH [{xpath}] FAIL:{e}')
+
+    def click_element_id(self, id):
+        try:
+            wait = WebDriverWait(self.state.chromeWeb, 10)  # 創建 WebDriverWait 對象
+            result_click_element_id = wait.until(EC.element_to_be_clickable((By.ID, id)))
+            result_click_element_id.click()
+            logger.error(f'CLICK ID [{id}] SUEECSS')
+        except Exception as e:
+            logger.error(f'CLICK ID [{id}] FAIL:{e}')
+            
+    def login(self, account, pswd):
+        # 取得驗證碼位置
+        try:
+            #等待頁面加載ID是verifyimg元素
+            WebDriverWait(self.state.chromeWeb, 10).until(
+                EC.presence_of_element_located(By.ID, 'verifyimg')
+            )
+        
+            #截圖並處理驗證碼
+            self.state.chromeWeb.save_screenshot("test.png")
+            element = self.state.chromeWeb.find_element(By.ID, "verifyimg")
+            verification_code = self.img(element)
+
+            #驗證碼檢查
+            if verification_code != "111":
+                while len(verification_code) != 4:
+                    self.state.cchromeWeb.refresh()
+                    time.sleep(1)
+                    self.state.cchromeWeb.get_screenshot_as_file("test.png")
+                    element = self.state.cchromeWeb.find_element(By.ID, "verifyimg")
+                    verification_code = self.img(element)
+            else:
+                self.state.chromeWeb.quit()
+                logger.error("驗證碼解析失敗，請重新執行")
+            # 登入開始
+            self.state.chromeWeb.find_element(By.NAME, "UserName").send_keys(account)
+            self.state.chromeWeb.find_element(By.NAME, "Password").send_keys(pswd)
+            self.state.chromeWeb.find_element(By.XPATH, '//*[@id="txtInvalidation"]').send_keys(verification_code)
+            logger.info('輸入驗證碼完成')
+            time.sleep(1)
+            self.state.chromeWeb.find_element(By.NAME, "Submit").click() #登入按鈕
+            logger.info('登入成功')
+            return True
+        except Exception as e:
+            logger.error(f'登入失敗:{e}')
+            return False
+    #驗證碼解析用
+    def img(self, element):
+        try:
+            element.location  # 取得圖片位置
+            element.size  # 取得高度寬度
+            left = element.location["x"]  # 取得左邊
+            right = element.location["x"]+element.size["width"]  # 取得右邊
+            top = element.location["y"]  # 取得上面
+            bottom = element.location["y"]+element.size["height"]  # 取得下邊
+
+            # 切割出驗證碼
+            img_code = Image.open(".\\test.png")
+            img_code.load()  # 確保圖片完全載入
+            img_code = img_code.crop(
+                (left, top, right, bottom))  # 順序一定要是 x,y,x+w,y+h
+            img_code.save("verify.png", "png")
+
+            # 對驗證碼進行處理
+            img_code = img_code.convert("L")
+            pix = img_code.load()
+            w, h = img_code.size
+            threshold = 205  # 畫素閾值
+
+            # 遍歷所有畫素，大於閾值的為黑色
+            for y in range(h):
+                for x in range(w):
+                    if pix[x, y] < threshold:
+                        pix[x, y] = 0
+                    else:
+                        pix[x, y] = 255
+
+            # 根據畫素二值結果重新生成圖片
+            data = img_code.getdata()
+            w, h = img_code.size
+            black_point = 0
+            for x in range(1, w - 1):
+                for y in range(1, h - 1):
+                    mid_pixel = data[w * y + x]
+                    if mid_pixel < 50:
+                        top_pixel = data[w * (y - 1) + x]
+                        left_pixel = data[w * y + (x - 1)]
+                        down_pixel = data[w * (y + 1) + x]
+                        right_pixel = data[w * y + (x + 1)]
+                        if top_pixel < 10:
+                            black_point += 1
+                        if left_pixel < 10:
+                            black_point += 1
+                        if down_pixel < 10:
+                            black_point += 1
+                        if right_pixel < 10:
+                            black_point += 1
+                        if black_point < 1:
+                            img_code.putpixel((x, y), 255)
+                        black_point = 0
+
+            result = pytesseract.image_to_string(img_code)
+            # 可能存在異常符號，用正則提取其中的數字
+            regex = '\d+'
+            result = ''.join(re.findall(regex, result))
+            
+            os.remove("verify.png")
+            os.remove("test.png")
+            return result
+        
+        except Exception as e:
+            logger.error(f'驗證碼處理失敗：{e}')
+            return '111'    
+
+class ExcelFunction:
+    
+    def __init__(self, state, web_helper):
+        self.state = state
+        self.web_helper = web_helper
+    
+    def excel_file_name(self, files):
+        #在前端顯示上傳檔案名稱
+        gamename = []
+        try:
+            for uploaded_file_name in files:
+                    excel_game_name = uploaded_file_name.name
+                    excel_game_name = excel_game_name.replace('.xlsx','')
+                    gamename.append(excel_game_name)
+            logger.info('從EXCEL提取遊戲名稱成功')
+            return gamename
+        except Exception as e:
+            logger.error(f'從EXCEL提取遊戲名稱失敗：{e}')
+            return []
+    
+    def excel_list(file_path):
+        gameName_list = []
+        # excel = load_workbook(file_path)  # 讀取excel檔
+        for x in file_path:
+            excel = load_workbook(x)
+            for sheetName in excel.sheetnames:  # 把excel 的sheet全部取出遍歷
+                try:
+                    sheet = excel[sheetName]  # 對EXCEL切換sheet
+                except:
+                    break
+                excelGame = sheet[1]
+                excelGameName = excelGame[0].value
+                if excelGameName == None:
+                    continue
+                else:
+                    gameNameRow = sheet[1]
+                    gameNameValue = gameNameRow[0].value
+                    gameName_list.append(gameNameValue)
+        return gameName_list
 
 # Create your views here.
 def homepage(request):
@@ -198,132 +485,6 @@ def handle_sta2(account, pswd, url_mapping):
     
 def handle_prod(account, pswd, url_mapping):
     print('gcadmin')
-
-def open_url(url):
-    global chromeWeb
-    chromeWeb = webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager().install())
-    )
-
-    chromeWeb.maximize_window()
-    chromeWeb.get(url)
-
-def switch_to_frame(frame_name):
-    """切換到指定的框架"""
-    chromeWeb.switch_to.default_content()
-    chromeWeb.switch_to.frame(frame_name)
-
-def click_element_xpath(xpath):
-    """等待並點擊指定的元素"""
-    wait = WebDriverWait(chromeWeb, 10)  # 創建 WebDriverWait 對象
-    result_click_element_xpath = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-    result_click_element_xpath.click()
-    return 
-
-def click_element_id(id):
-    wait = WebDriverWait(chromeWeb, 10)  # 創建 WebDriverWait 對象
-    result_click_element_id = wait.until(EC.element_to_be_clickable((By.ID, id)))
-    result_click_element_id.click()
-    return 
-
-def login(account, pswd):
-    # 取得驗證碼位置
-    time.sleep(1)
-    chromeWeb.save_screenshot("test.png")
-    element = chromeWeb.find_element(By.ID, "verifyimg")
-    verification_code = img(element)
-    time.sleep(1)
-    if verification_code != "111":
-        while len(verification_code) != 4:
-            chromeWeb.refresh()
-            time.sleep(1)
-            chromeWeb.get_screenshot_as_file("test.png")
-            element = chromeWeb.find_element(By.ID, "verifyimg")
-            verification_code = img(element)
-    else:
-        chromeWeb.quit()
-        print("驗證碼解析失敗，請重新執行")
-    # 登入開始
-    chromeWeb.find_element(By.NAME, "UserName").send_keys(account)
-    time.sleep(1)
-    chromeWeb.find_element(By.NAME, "Password").send_keys(pswd)
-    time.sleep(1)
-    chromeWeb.find_element(By.XPATH, '//*[@id="txtInvalidation"]').send_keys(
-        verification_code
-    )
-    print('輸入驗證碼完成')
-    time.sleep(1)
-    chromeWeb.find_element(By.NAME, "Submit").click() #登入按鈕
-
-
-#驗證碼解析用
-def img(element):
-    try:
-        element.location  # 取得圖片位置
-        element.size  # 取得高度寬度
-        left = element.location["x"]  # 取得左邊
-        right = element.location["x"]+element.size["width"]  # 取得右邊
-        top = element.location["y"]  # 取得上面
-        bottom = element.location["y"]+element.size["height"]  # 取得下邊
-
-        # 切割出驗證碼
-        img_code = Image.open(".\\test.png")
-        img_code.load()  # 確保圖片完全載入
-        img_code = img_code.crop(
-            (left, top, right, bottom))  # 順序一定要是 x,y,x+w,y+h
-        img_code.save("verify.png", "png")
-
-        # 對驗證碼進行處理
-        img_code = img_code.convert("L")
-        pix = img_code.load()
-        w, h = img_code.size
-        threshold = 205  # 畫素閾值
-
-        # 遍歷所有畫素，大於閾值的為黑色
-        for y in range(h):
-            for x in range(w):
-                if pix[x, y] < threshold:
-                    pix[x, y] = 0
-                else:
-                    pix[x, y] = 255
-
-        # 根據畫素二值結果重新生成圖片
-        data = img_code.getdata()
-        w, h = img_code.size
-        black_point = 0
-        for x in range(1, w - 1):
-            for y in range(1, h - 1):
-                mid_pixel = data[w * y + x]
-                if mid_pixel < 50:
-                    top_pixel = data[w * (y - 1) + x]
-                    left_pixel = data[w * y + (x - 1)]
-                    down_pixel = data[w * (y + 1) + x]
-                    right_pixel = data[w * y + (x + 1)]
-                    if top_pixel < 10:
-                        black_point += 1
-                    if left_pixel < 10:
-                        black_point += 1
-                    if down_pixel < 10:
-                        black_point += 1
-                    if right_pixel < 10:
-                        black_point += 1
-                    if black_point < 1:
-                        img_code.putpixel((x, y), 255)
-                    black_point = 0
-
-        result = pytesseract.image_to_string(img_code)
-        # 可能存在異常符號，用正則提取其中的數字
-        regex = '\d+'
-        result = ''.join(re.findall(regex, result))
-
-        os.remove("verify.png")
-        os.remove("test.png")
-    except Exception as e:
-        print(e)
-        return '111'
-
-    return result
-
 
 def admin_function(request):
     
