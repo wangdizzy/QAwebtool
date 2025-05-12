@@ -109,7 +109,6 @@ def excel_list(file_path):
                 gameName_list.append(gameNameValue)
     return gameName_list
 
-
 def excel_gcadmin(file_path):
     gameTypeGameName = {}
     # excel = load_workbook(file_path)
@@ -226,6 +225,28 @@ def click_element_id(id):
     result_click_element_id.click()
     return 
 
+def report_game_name(xpath):
+    select_outstanding_game_game = wait_chromeweb_xpath(xpath)
+    time.sleep(1)
+    select = Select(select_outstanding_game_game)
+    options = select.options
+    outstanding_admin_options_list = []
+    for option in options:
+        outstanding_admin_options_list.append(option.text)
+    return outstanding_admin_options_list
+
+def wait_chromeweb_id(id):
+    waitChromewebId = WebDriverWait(chromeWeb, 10).until(
+            EC.presence_of_element_located((By.ID, id))
+    )
+    return waitChromewebId
+    
+def wait_chromeweb_xpath(xpath):
+    waitChromewebXpath = WebDriverWait(chromeWeb, 10).until(
+            EC.presence_of_element_located((By.XPATH, xpath))
+    )
+    return waitChromewebXpath
+
 def login(account, pswd):
     # 取得驗證碼位置
     time.sleep(1)
@@ -329,7 +350,7 @@ def admin_function(request):
     
     #接收點選功能名稱
     action = request.POST.get('action')
-    print(action)
+    print(f'執行功能：{action}')
     #獲取當前url
     nowUrl = chromeWeb.current_url
     switch_to_frame("leftFrame")
@@ -358,7 +379,6 @@ def admin_function(request):
 
 
 def acWinLoseReport(nowUrl):
-    global admin_report_xpath
     if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
         admin_report_xpath = '//*[@id="div_leftLink"]/div[5]'
         #thor、sta1、sta2
@@ -389,51 +409,39 @@ def acWinLoseReport(nowUrl):
         #casino
         click_element_xpath('//*[@id="form1"]/div[3]/div[1]/a[2]')
 
-            
         time.sleep(1)
         #provider
-        
+        wait_chromeweb_id("slt_provider")
         provider =  chromeWeb.find_element(By.ID, "slt_provider")
-        
         if game == "pp":
             Select(provider).select_by_value("22")  # 下拉選單取值 PP
         else:
             Select(provider).select_by_value("6")  # 下拉選單取值 SG
-
-        time.sleep(1)
-        ac_win_lose_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
-        
-        #sltGame
-        click_element_xpath('//*[@id="slt_game"]')
-        
-        time.sleep(2)
-        ac_win_lose_options_list = ac_win_lose_GameName.find_elements(By.TAG_NAME, "option")
-
-        ac_win_lose_admin_list = []
-
-        for option in ac_win_lose_options_list:
-            ac_win_lose_admin_list.append(option.text)
-
+ 
+        #定位Game Name下拉選單定獲取下拉選單資料
+        ac_win_lose_admin_list = report_game_name('//*[@id="slt_game"]')
         ac_num = 0
+        gameComparisonResults = []
         for uploaded_file_name in gamename:
             ac_num += 1
-            gameComparisonResults = []
             if ac_win_lose_admin_list.count(uploaded_file_name) == 1:  # x 在 admin_list出現次數是否為1
                 gameComparisonResults.append(f'{str(ac_num)}. {uploaded_file_name}  --  PASS')
+                print(f'{str(ac_num)}. {uploaded_file_name}  --  PASS')
                 
             else:
                 gameComparisonResults.append(f'{str(ac_num)}. {uploaded_file_name}  -- FAIL')
-
+                print(f'{str(ac_num)}. {uploaded_file_name}  -- FAIL')
+        print('AC WIN LOSE END')
         #跳出mainFrame，並進入leftFrame
         switch_to_frame("leftFrame")
-        print(gameComparisonResults)
-        
         return gameComparisonResults
+    
     else:
         pass
     
 def outstandingReport(nowUrl):
     if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        admin_report_xpath = '//*[@id="div_leftLink"]/div[5]'
         switch_to_frame('leftFrame')
         #點選Report
         time.sleep(1)
@@ -442,7 +450,6 @@ def outstandingReport(nowUrl):
         except:
             click_element_xpath(admin_report_xpath)
             #點選outstanding
-            time.sleep(1)
             click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[12]/a')
         switch_to_frame('mainFrame')
         try:
@@ -453,23 +460,15 @@ def outstandingReport(nowUrl):
         except:
             print("outstanding 目前無SS層資料")
         #casino
-        click_element_xpath('//*[@id="form1"]/div[3]/div[1]/a[2]')
+        wait_chromeweb_id("slt_provider")
         provider = chromeWeb.find_element(By.ID, "slt_provider")
-        if game == "PP":
+        if game == "pp":
             Select(provider).select_by_value("22")  # 下拉選單取值 PP
         else:
             Select(provider).select_by_value("6")  # 下拉選單取值 SG
-        
-        outstanding_GameName = click_element_xpath('//*[@id="slt_game"]')
-        #展開Game Name下拉選單
-        click_element_xpath('//*[@id="slt_game"]')
-        
-        outstanding_options_list = outstanding_GameName.find_elements(By.TAG_NAME, "option")
-        outstanding_admin_options_list = []
-        
-        for option in outstanding_options_list:
-            outstanding_admin_options_list.append(option.text)
-        
+            
+        #定位Game Name下拉選單定獲取下拉選單資料
+        outstanding_admin_options_list = report_game_name('//*[@id="slt_game"]')         
         out_num = 0
         for x in gamename:
             out_num += 1
@@ -478,11 +477,13 @@ def outstandingReport(nowUrl):
                 print(f'{str(out_num)}. {x}  -- PASS')
             else:
                 print(f'{str(out_num)}. {x}  -- FAIL')  
+        print('Outstanding END')
     else:
         pass
     
 def GameJackpotReport(nowUrl):
     if any(substring in nowUrl for substring in ['12vin', 'vina368', 'cmmd368']):
+        admin_report_xpath = '//*[@id="div_leftLink"]/div[5]'
         switch_to_frame('leftFrame')
         time.sleep(1)
         #點選Game Jack
@@ -493,22 +494,19 @@ def GameJackpotReport(nowUrl):
             time.sleep(1)
             click_element_xpath('//*[@id="div_leftLink"]/ul[5]/li[17]/a')
         switch_to_frame('mainFrame')
-        time.sleep(1)
+        
+        wait_chromeweb_id('slt_provider')
         provider = chromeWeb.find_element(By.ID, 'slt_provider')
-        print(f'game：{game}')
         if game == "PP":
             Select(provider).select_by_value("22")  # 下拉選單取值 PP
         else:
             Select(provider).select_by_value("6")  # 下拉選單取值 SG
         time.sleep(1)
-        Game_Jackpot_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
-        click_element_xpath('//*[@id="slt_game"]')
-        Game_Jackpot_options_list = Game_Jackpot_GameName.find_elements(By.TAG_NAME, "option")
-        Game_Jackpot_admin_options_list = []
-        for option in Game_Jackpot_options_list:
-            Game_Jackpot_admin_options_list.append(option.text)
+        
+        #定位Game Name下拉選單定獲取下拉選單資料
+        Game_Jackpot_admin_options_list = report_game_name('//*[@id="slt_game"]')
+        
         gj_num = 0
-        print(f'Game_Jackpot_admin_options_list：{Game_Jackpot_admin_options_list}')
         for x in gamename:
             gj_num += 1
             # x 在 admin_list出現次數是否為1
@@ -516,6 +514,7 @@ def GameJackpotReport(nowUrl):
                 print(f'{str(gj_num)}. {x}  -- PASS')
             else:
                 print(f'{str(gj_num)}. {x}  -- FAIL')
+        print('Game Jackpot END')
     else:
         pass
     
@@ -546,12 +545,13 @@ def GameTransactionReport(nowUrl):
         return('url錯誤')
     
     switch_to_frame('mainFrame')
-    time.sleep(1)
+    wait_chromeweb_id("slt_provider")
     provider = chromeWeb.find_element(By.ID, "slt_provider")
     if game == "PP":
         Select(provider).select_by_value("22")  # 下拉選單取值 PP
     else:
         Select(provider).select_by_value("6")  # 下拉選單取值 SG
+    '''
     Game_Trancsaction_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
     click_element_xpath('//*[@id="slt_game"]')
     time.sleep(2)
@@ -560,7 +560,9 @@ def GameTransactionReport(nowUrl):
 
     for option in Game_Trancsaction_options_list:
         Game_Trancsaction_admin_options_list.append(option.text)
-
+    '''
+    #定位Game Name下拉選單定獲取下拉選單資料
+    Game_Trancsaction_admin_options_list = report_game_name('//*[@id="slt_game"]')
     gt_num = 0
     for x in gamename:
         gt_num += 1
@@ -569,6 +571,7 @@ def GameTransactionReport(nowUrl):
             print(f'{str(gt_num)}. {x}  -- PASS')
         else:
             print(f'{str(gt_num)}. {x}  -- FAIL')
+    print('Game Transaction END')
 
 def Betlimit(nowUrl):
     cur = {
