@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from home.views import homepage, showpost, ppsg, upload, ppsgFunctionSelection, admin_function
+from home.views import  HtmlData 
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
