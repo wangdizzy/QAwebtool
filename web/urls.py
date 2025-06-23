@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from home.views import homepage, showpost, ppsg, upload, ppsgFunctionSelection, admin_function
+from home.views import homepage, showpost, ppsg, upload, ppsgFunctionSelection, admin_function, oddsConversion
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,5 +24,6 @@ urlpatterns = [
     path('game/', ppsg),
     path('upload/', upload),
     path('ppsgFunctionSelection/', ppsgFunctionSelection),
-    path('adminfunction/', admin_function)
+    path('adminfunction/', admin_function),
+    path('oddsconversion/', oddsConversion)
 ]

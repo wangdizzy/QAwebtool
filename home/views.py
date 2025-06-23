@@ -66,7 +66,8 @@ def upload(request):
         game = request.POST.get('game')
         environment = request.POST.get('environment')
         website = request.POST.get('website')
-        uploaded_file = request.FILES.getlist('excelFile')  # 獲取上傳的檔案
+        uploaded_file = request.FILES.getlist('excelFile')  # 獲取上傳的檔案         
+        
         gamename = excel_file_name(uploaded_file)
         
         parameters(website, environment, account, pswd)
@@ -551,16 +552,7 @@ def GameTransactionReport(nowUrl):
         Select(provider).select_by_value("22")  # 下拉選單取值 PP
     else:
         Select(provider).select_by_value("6")  # 下拉選單取值 SG
-    '''
-    Game_Trancsaction_GameName = chromeWeb.find_element(By.XPATH, '//*[@id="slt_game"]')
-    click_element_xpath('//*[@id="slt_game"]')
-    time.sleep(2)
-    Game_Trancsaction_options_list = Game_Trancsaction_GameName.find_elements(By.TAG_NAME, "option")
-    Game_Trancsaction_admin_options_list = []
-
-    for option in Game_Trancsaction_options_list:
-        Game_Trancsaction_admin_options_list.append(option.text)
-    '''
+        
     #定位Game Name下拉選單定獲取下拉選單資料
     Game_Trancsaction_admin_options_list = report_game_name('//*[@id="slt_game"]')
     gt_num = 0
@@ -823,3 +815,6 @@ def adminPage():
         cur_dict[gameName1] = betLimit1  # 取出職加入admin字典
 
     return cur_dict
+
+def oddsConversion(requset):
+    return render(requset, "oddsConversion.html")
