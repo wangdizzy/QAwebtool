@@ -7,6 +7,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from PIL import Image
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 import time
 import pytesseract
@@ -191,9 +193,20 @@ def handle_prod(account, pswd, url):
 def open_url(url):
     global chromeWeb
     
-    chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    options = Options()
+    options.add_argument("--headless")           # Railway 沒有畫面，必須加
+    options.add_argument("--no-sandbox")          # Railway 必須加
+    options.add_argument("--disable-dev-shm-usage")  # 防止記憶體不足崩潰
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")  # 取代 maximize_window()
+    
+    service = Service(executable_path="/run/current-system/sw/bin/chromedriver")
+    options.binary_location = "/run/current-system/sw/bin/chromium"
+    
+    chromeWeb = webdriver.Chrome(service=service, options=options)
+    #chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
 
-    chromeWeb.maximize_window()
+    #chromeWeb.maximize_window()
     chromeWeb.get(url)
 
 
