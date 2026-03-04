@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}遊戲檔案上傳{% endblock %}
+
+{% block headmessage %}
+    <h3 style="font-family:微軟正黑體;">遊戲檔案上傳</h3>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function sendDataToExcel(){
+            const formData = new FormData();
+            const fileInput = document.getElementById('excelFile')
+    
+            if (!fileInput.files.length) {
+                alert("請選擇一個檔案");
+                return;
+            }
+
+            for(let i=0; i<fileInput.files.length; i++){
+                formData.append('excelFile', fileInput.files[i])
+            }
+           
+            $.ajax({
+                url:'/uploadExcel/',
+                type:'POST',
+                data:formData,
+                processData:false,
+                contentType:false,
+                success: function(response){
+                    console.log("=== 執行成功 ===");
+                    
+                },
+                error: function(jqXHR){
+                    console.log("錯誤回應:", jqXHR.responseText);
+                }
+            });
+            return false;
+        }
+    </script>
+
+{% endblock %}
+
+{% block content %}
+        <p style="color: brown;">
+            先上傳Betlimit檔案，再上傳GameType和Provider Game Type檔案
+        </p>
+        <p>
+            <a href="https://docs.google.com/spreadsheets/d/1qWdc0QTGY13LEsr_N_5SA4cfyWTHaGXk8GhJFosoNzc/edit?usp=sharing" target="_blank">
+                遊戲上傳內容確認頁籤gameData(PP)
+            </a>
+        </p>
+        <p style="font-family:微軟正黑體;">
+            Excel檔案：
+            <input type="file" id='excelFile' name="excelFile" accept=".xlsx" multiple/>
+        </p>
+        
+        <button type="submit" onclick="sendDataToExcel()">上傳</button>
+{% endblock %}

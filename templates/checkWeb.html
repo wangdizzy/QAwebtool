@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}{{post.title}} 測試環境基礎檢查 {% endblock %}
+{% block headmessage %}
+    <h3 style="font-family:微軟正黑體;">測試環境基礎檢查</h3>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            gap: 10px;
+            justify-content: left;
+        }
+    
+        button {
+            padding: 10px;
+            font-size: 14px;
+            background: lightblue;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    
+        button:hover {
+            background: darkblue;
+            color: white;
+        }
+
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const allCheckbox = document.getElementById('all1');
+            const webCheckbox = document.getElementById('web');
+            const newCheckbox = document.getElementById('new');
+            const oldCheckbox = document.getElementById('old');
+            const deviceCheckboxes = [webCheckbox, newCheckbox, oldCheckbox];
+
+            // 當All被點擊時
+            allCheckbox.addEventListener('change', function() {
+                deviceCheckboxes.forEach(checkbox => {
+                    checkbox.checked = allCheckbox.checked;
+                });
+            });
+
+            // 當其他選項被點擊時
+            deviceCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = deviceCheckboxes.every(cb => cb.checked);
+                    allCheckbox.checked = allChecked;
+                });
+            });
+
+            const all2Checkbox = document.getElementById('all2');
+            const cmdCheckbox = document.getElementById('cmd');
+            const cbCheckbox = document.getElementById('369cb');
+            const mr8Checkbox = document.getElementById('mr8');
+            const in1betdCheckbox = document.getElementById('3in1bet');
+            const betCheckbox = document.getElementById('368bet');
+            const sport368Checkbox = document.getElementById('sport368');
+            const cbetCheckbox = document.getElementById('cbet');
+            const gc855Checkbox = document.getElementById('gc855');
+            const max222Checkbox = document.getElementById('max222');
+            const apiCheckbox = document.getElementById('api');
+            const brandCheckboxes = [cmdCheckbox, cbCheckbox, mr8Checkbox, in1betdCheckbox, betCheckbox, sport368Checkbox, cbetCheckbox, gc855Checkbox, max222Checkbox, apiCheckbox];
+
+            // 當All2被點擊時
+            all2Checkbox.addEventListener('change', function() {
+                brandCheckboxes.forEach(checkbox => {
+                    checkbox.checked = all2Checkbox.checked;
+                });
+            });
+
+            // 當其他選項被點擊時
+            brandCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const all2Checked = brandCheckboxes.every(cb => cb.checked);
+                    all2Checkbox.checked = all2Checked;
+                });
+            });
+
+
+        })
+
+        function senddata(){
+            const formData = new FormData();
+            const account = document.getElementById('account').value;
+            const pswd = document.getElementById('pswd').value;
+
+            formData.append('account', account)
+            formData.append('pswd', pswd)
+            formData.append('game', game)
+            formData.append('environment', environment)
+            formData.append('website', website)
+            
+            $.ajax({
+                url:'/upload/',
+                type:'POST',
+                data:formData,
+                processData:false,
+                contentType:false,
+                success: function(response){
+                    console.log("=== AJAX 成功回應 ===");
+                    console.log("完整 response:", response);
+                    console.log("response.success:", response.success);
+                    console.log("response.data:", response.data);
+                    console.log("response.results:", response.results);
+                },
+                error: function(jqXHR){
+                    console.log("錯誤回應:", jqXHR.responseText);
+                }
+            });
+        }
+    </script>
+{% endblock %}
+{% block content %}
+
+    <div>
+        <table>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    帳號： <input type="text" id='account'>
+                </p>
+            </tr>
+            <tr>
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    密碼： <input type="password" id='pswd'>
+                </p>
+            </tr>
+            <tr class="checkbox-group">
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    裝置： 
+                    <input type="checkbox" id="all1" checked>
+                    <label for="all">All</label>
+                    <input type="checkbox" id="web" checked>
+                    <label for="all">web</label>
+                    <input type="checkbox" id="new" checked>
+                    <label for="new">新手機</label>
+                    <input type="checkbox" id="old" checked>
+                    <label for="old">舊手機</label>
+                </p>
+            </tr>
+            <tr class="checkbox-group">
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    品牌： 
+                    <input type="checkbox" id="all2" checked>
+                    <label for="all">All</label>
+                    <input type="checkbox" id="cmd" checked>
+                    <label for="cmd">CMDBET</label>
+                    <input type="checkbox" id="369cb" checked>
+                    <label for="369cb">369CB</label>
+                    <input type="checkbox" id="mr8" checked>
+                    <label for="mr8">MR8</label>
+                    <input type="checkbox" id="3in1bet" checked>
+                    <label for="3in1bet">3in1Bet</label>
+                    <input type="checkbox" id="368bet" checked>
+                    <label for="368bet">368BET</label>
+                    <input type="checkbox" id="sport368" checked>
+                    <label for="sport368">Sport368</label>
+                    <input type="checkbox" id="cbet" checked>
+                    <label for="cbet">Cbet</label>
+                    <input type="checkbox" id="gc855" checked>
+                    <label for="gc855">GC855</label>
+                    <input type="checkbox" id="max222" checked>
+                    <label for="max222">Max222</label>
+                    <input type="checkbox" id="api" checked>
+                    <label for="api">API</label>
+                </p>
+            </tr>
+            <tr class="checkbox-group">
+                <p style="font-family:微軟正黑體;font-size:16pt ;letter-spacing:2pt;">
+                    測試環境： 
+                    <input type="checkbox" id="thor" >
+                    <label for="thor">THOR</label>
+                    <input type="checkbox" id="sta1" >
+                    <label for="sta1">STA1</label>
+                    <input type="checkbox" id="sta2" >
+                    <label for="sta2">STA2</label>
+                </p>
+            </tr>
+            <tr class="button-group">
+                <td>
+                    <button type="button" onclick="senddata()">登入</button>   
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

@@ -44,13 +44,69 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
+
+        /* 🔥 新增：禁用按鈕樣式 */
+        button:disabled {
+            background: #cccccc !important;
+            color: #666666 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* 🔥 新增：禁用標題樣式 */
+        .admin-title.disabled {
+            color: #999999;
+        }
+
     </style>
         
     <script>
-        function adminfunction(button){
+         // 🔥 頁面載入時執行
+        document.addEventListener('DOMContentLoaded', function() {
+            const website = sessionStorage.getItem('website');
+            console.log("當前 website:", website);
+            
+            if (website) {
+                disableOtherSections(website);
+            }
+        });
+
+        // 🔥 禁用其他區塊
+        function disableOtherSections(selectedWebsite) {
+            const sections = {
+                'admin': 'admin-section',
+                'agent': 'agent-section',
+                'max222agent': 'max222-section',
+                'gcadmin': 'gcadmin-section'
+            };
+
+            // 禁用所有非選中的區塊
+            for (const [website, sectionId] of Object.entries(sections)) {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    if (website !== selectedWebsite) {
+                        // 禁用標題
+                        const title = section.querySelector('.admin-title');
+                        if (title) {
+                            title.classList.add('disabled');
+                        }
+                        
+                        // 禁用所有按鈕
+                        const buttons = section.querySelectorAll('button');
+                        buttons.forEach(btn => {
+                            btn.disabled = true;
+                        });
+                    }
+                }
+            }
+        }
+
+        function check_report_function(button){
             const buttonText = button.innerText.trim();  // 取得按鈕的文字並去除首尾空格
+            console.log("執行功能:", buttonText);
+
             const formData = new FormData();
             formData.append('action', buttonText)
+
             $.ajax({
                 url:'/adminfunction/',
                 type:'POST',
@@ -58,17 +114,15 @@
                 processData:false,
                 contentType:false,
                 success: function(response) {
-                    console.log("成功回應:", response);
-            
-                    if (response.data.length > 0) {
-                        alert("獲取的數據：\n" + response.data.join("\n")); // 顯示 list
-                    } else {
-                        alert("沒有數據");
-                    }
+                    console.log("=== AJAX 成功回應 ===");
+                    console.log("完整 response:", response);
+                    console.log("response.success:", response.success);
+                    console.log("response.data:", response.data);
+                    console.log("response.results:", response.results);
+
                 },
                 error: function(jqXHR) {
                     console.log("錯誤回應:", jqXHR.responseText);
-                    alert("操作失敗：" + jqXHR.responseText);
                 }
             });
         }
@@ -77,28 +131,40 @@
 {% endblock %}
 {% block content %}
 <div class="admin-container">
-    <p class="admin-title">Admin</p>
-    <div class="button-group">
-        <button onclick="adminfunction(this)">AC Win Lose</button>
-        <button onclick="adminfunction(this)">Outstanding</button>
-        <button onclick="adminfunction(this)">Game Jackpot</button>
-        <button onclick="adminfunction(this)">Game Transaction</button>
-        <button onclick="adminfunction(this)">Betlimit</button>
+    <div id="admin-section">
+        <p class="admin-title">Admin</p>
+        <div class="button-group">
+            <button onclick="check_report_function(this)">AC Win Lose</button>
+            <button onclick="check_report_function(this)">Outstanding</button>
+            <button onclick="check_report_function(this)">Game Jackpot</button>
+            <button onclick="check_report_function(this)">Game Transaction</button>
+            <button onclick="check_report_function(this)">Betlimit</button>
+        </div>
     </div>
-    <p class="admin-title">Agent</p>
-    <div class="button-group">
-        <button>AC Win Lose</button>
-        <button>Outstanding</button>
+    
+    <div id="agent-section">
+        <p class="admin-title">Agent</p>
+        <div class="button-group">
+            <button onclick="check_report_function(this)">AC Win Lose</button>
+            <button onclick="check_report_function(this)">Outstanding</button>
+        </div>
     </div>
-    <p class="admin-title">MAX222 Agent</p>
-    <div class="button-group">
-        <button>AC Win Lose</button>
-        <button>Outstanding</button>
-    </div>   
-    <p class="admin-title">GCAdmin</p>
-    <div class="button-group">
-        <button>Game List</button>
-    </div> 
+    
+    <div id="max222-section">
+        <p class="admin-title">MAX222 Agent</p>
+        <div class="button-group">
+            <button onclick="check_report_function(this)">AC Win Lose</button>
+            <button onclick="check_report_function(this)">Outstanding</button>
+        </div>
+    </div>`
+    
+    <div id="gcadmin-section">
+        <p class="admin-title">GCAdmin</p>
+        <div class="button-group">
+            <button onclick="check_report_function(this)">Game List</button>
+        </div> 
+    </div>
+    
     <p class="return-ppsg"> 
         <a style="font-family:微軟正黑體;" href="../game/">
             <button type="submit">登出</button>

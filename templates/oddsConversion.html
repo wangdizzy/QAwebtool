@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group賠率計算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 20px;
+            font-size: 12px;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .section {
+            background-color: #a0a0a0;
+            border-radius: 8px;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #888;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .group-a {
+            min-width: 500px;
+        }
+        
+        .match-profile, .mo-web {
+            min-width: 300px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #d0d0d0;
+        }
+        
+        th {
+            background-color: #b0b0b0;
+            padding: 6px 4px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #999;
+            font-size: 11px;
+        }
+        
+        td {
+            padding: 4px;
+            text-align: center;
+            border: 1px solid #999;
+            background-color: #e0e0e0;
+        }
+        
+        .team-label {
+            background-color: #c0c0c0;
+            font-weight: bold;
+            text-align: center;
+            width: 40px;
+        }
+        
+        .odds-up {
+            color: #0066cc;
+        }
+        
+        .odds-down {
+            color: #cc0000;
+        }
+        
+        .diamond {
+            color: #0066cc;
+        }
+        
+        .input-small {
+            width: 30px;
+            text-align: center;
+            border: 1px solid #999;
+            background-color: white;
+            font-size: 11px;
+            transition: background-color 0.2s;
+        }
+        
+        .input-small:focus {
+            background-color: #fff8dc;
+            outline: 2px solid #4CAF50;
+        }
+        
+        .input-mo {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #999;
+            background-color: white;
+            font-size: 11px;
+            transition: background-color 0.2s;
+        }
+        
+        .input-mo:focus {
+            background-color: #fff8dc;
+            outline: 2px solid #4CAF50;
+        }
+        
+        .profile-row {
+            background-color: #d0d0d0;
+        }
+        
+        .profile-row td {
+            padding: 8px;
+            font-weight: bold;
+        }
+        
+        .mo-row td {
+            padding: 6px;
+        }
+        
+        .h-indicator {
+            background-color: #ffcccc;
+            color: red;
+            font-weight: bold;
+            padding: 1px 3px;
+            border: 1px solid #cc0000;
+            display: inline-block;
+            margin-right: 2px;
+            font-size: 10px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .updated-indicator {
+            background-color: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .updated-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <span id="update-indicator" class="updated-indicator">已更新</span>
+    </div>
+
+    <div class="container">
+        <!-- Group A Section -->
+        <div class="section group-a">
+            <h3 class="section-header">Group A</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>FT HDP</th>
+                        <th>FT OU</th>
+                        <th>HT HDP</th>
+                        <th>HT OU</th>
+                        <th>OE</th>
+                        <th>HT OE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="team-label">MY</td>
+                        <td id="my-fthdp">
+                            <span class="odds-up diamond">-0.93♦</span><br>
+                            <span class="odds-down">0.83</span>
+                        </td>
+                        <td id="my-ftou">
+                            <span class="odds-up diamond">-0.93♦</span><br>
+                            <span class="odds-down">0.83</span>
+                        </td>
+                        <td id="my-hthdp">
+                            <span class="odds-up diamond">-0.70♦</span><br>
+                            <span class="odds-down">0.60</span>
+                        </td>
+                        <td id="my-htou">
+                            <span class="odds-up diamond">-0.70♦</span><br>
+                            <span class="odds-down">0.60</span>
+                        </td>
+                        <td id="my-oe">
+                            <span class="odds-up diamond">0.83♦</span><br>
+                            <span class="odds-down">-0.93</span>
+                        </td>
+                        <td id="my-htoe">
+                            <span class="odds-up diamond">0.83♦</span><br>
+                            <span class="odds-down">-0.93</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="team-label">HK</td>
+                        <td id="hk-fthdp">
+                            <span class="odds-up diamond">1.07♦</span><br>
+                            <span class="odds-down">0.83</span>
+                        </td>
+                        <td id="hk-ftou">
+                            <span class="odds-up diamond">1.07♦</span><br>
+                            <span class="odds-down">0.83</span>
+                        </td>
+                        <td id="hk-hthdp">
+                            <span class="odds-up diamond">1.42♦</span><br>
+                            <span class="odds-down">0.60</span>
+                        </td>
+                        <td id="hk-htou">
+                            <span class="odds-up diamond">1.42♦</span><br>
+                            <span class="odds-down">0.60</span>
+                        </td>
+                        <td id="hk-oe">
+                            <span class="odds-up diamond">0.83♦</span><br>
+                            <span class="odds-down">1.07</span>
+                        </td>
+                        <td id="hk-htoe">
+                            <span class="odds-up diamond">0.83♦</span><br>
+                            <span class="odds-down">1.07</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="team-label">DEC</td>
+                        <td id="dec-fthdp">
+                            <span class="odds-up diamond">2.07♦</span><br>
+                            <span class="odds-down">1.83</span>
+                        </td>
+                        <td id="dec-ftou">
+                            <span class="odds-up diamond">2.07♦</span><br>
+                            <span class="odds-down">1.83</span>
+                        </td>
+                        <td id="dec-hthdp">
+                            <span class="odds-up diamond">2.42♦</span><br>
+                            <span class="odds-down">1.60</span>
+                        </td>
+                        <td id="dec-htou">
+                            <span class="odds-up diamond">2.42♦</span><br>
+                            <span class="odds-down">1.60</span>
+                        </td>
+                        <td id="dec-oe">
+                            <span class="odds-up diamond">1.83♦</span><br>
+                            <span class="odds-down">2.07</span>
+                        </td>
+                        <td id="dec-htoe">
+                            <span class="odds-up diamond">1.83♦</span><br>
+                            <span class="odds-down">2.07</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="team-label">ID</td>
+                        <td id="id-fthdp">
+                            <span class="odds-up diamond">1.07♦</span><br>
+                            <span class="odds-down">-1.20</span>
+                        </td>
+                        <td id="id-ftou">
+                            <span class="odds-up diamond">1.07♦</span><br>
+                            <span class="odds-down">-1.20</span>
+                        </td>
+                        <td id="id-hthdp">
+                            <span class="odds-up diamond">1.43♦</span><br>
+                            <span class="odds-down">-1.67</span>
+                        </td>
+                        <td id="id-htou">
+                            <span class="odds-up diamond">1.43♦</span><br>
+                            <span class="odds-down">-1.67</span>
+                        </td>
+                        <td id="id-oe">
+                            <span class="odds-up diamond">-1.20♦</span><br>
+                            <span class="odds-down">1.07</span>
+                        </td>
+                        <td id="id-htoe">
+                            <span class="odds-up diamond">-1.20♦</span><br>
+                            <span class="odds-down">1.07</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="team-label">US</td>
+                        <td id="us-fthdp">
+                            <span class="odds-up diamond">107♦</span><br>
+                            <span class="odds-down">-120</span>
+                        </td>
+                        <td id="us-ftou">
+                            <span class="odds-up diamond">107♦</span><br>
+                            <span class="odds-down">-120</span>
+                        </td>
+                        <td id="us-hthdp">
+                            <span class="odds-up diamond">143♦</span><br>
+                            <span class="odds-down">-167</span>
+                        </td>
+                        <td id="us-htou">
+                            <span class="odds-up diamond">143♦</span><br>
+                            <span class="odds-down">-167</span>
+                        </td>
+                        <td id="us-oe">
+                            <span class="odds-up diamond">-120♦</span><br>
+                            <span class="odds-down">107</span>
+                        </td>
+                        <td id="us-htoe">
+                            <span class="odds-up diamond">-120♦</span><br>
+                            <span class="odds-down">107</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="team-label">MP</td>
+                        <td id="mp-fthdp">
+                            <span class="odds-up diamond">2.050♦</span><br>
+                            <span class="odds-down">1.810</span>
+                        </td>
+                        <td id="mp-ftou">
+                            <span class="odds-up diamond">2.050♦</span><br>
+                            <span class="odds-down">1.810</span>
+                        </td>
+                        <td id="mp-hthdp">
+                            <span class="odds-up diamond">2.380♦</span><br>
+                            <span class="odds-down">1.580</span>
+                        </td>
+                        <td id="mp-htou">
+                            <span class="odds-up diamond">2.380♦</span><br>
+                            <span class="odds-down">1.580</span>
+                        </td>
+                        <td id="mp-oe">
+                            <span class="odds-up diamond">1.810♦</span><br>
+                            <span class="odds-down">2.050</span>
+                        </td>
+                        <td id="mp-htoe">
+                            <span class="odds-up diamond">1.810♦</span><br>
+                            <span class="odds-down">2.050</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Match Profile Section -->
+            <div class="section match-profile">
+                <h3 class="section-header">Match Profile (輸入參數)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>FT HDP</th>
+                            <th>FT OU</th>
+                            <th>HT HDP</th>
+                            <th>HT OU</th>
+                            <th>OE</th>
+                            <th>HT OE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="profile-row">
+                            <td>Spread<br>ParlayDiff</td>
+                            <td>
+                                <input type="number" id="spread-fthdp" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-fthdp" value="0.04" class="input-small" step="0.001">
+                            </td>
+                            <td>
+                                <input type="number" id="spread-ftou" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-ftou" value="0.04" class="input-small" step="0.001">
+                            </td>
+                            <td>
+                                <input type="number" id="spread-hthdp" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-hthdp" value="0.04" class="input-small" step="0.001">
+                            </td>
+                            <td>
+                                <input type="number" id="spread-htou" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-htou" value="0.04" class="input-small" step="0.001">
+                            </td>
+                            <td>
+                                <input type="number" id="spread-oe" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-oe" value="0.04" class="input-small" step="0.001">
+                            </td>
+                            <td>
+                                <input type="number" id="spread-htoe" value="10" class="input-small" step="0.01"><br>
+                                <input type="number" id="parlay-htoe" value="0.04" class="input-small"Step="0.001">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- MO Web Section -->
+            <div class="section mo-web">
+                <h3 class="section-header">MO Web (輸入基準值)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>FT HDP</th>
+                            <th>FT OU</th>
+                            <th>HT HDP</th>
+                            <th>HT OU</th>
+                            <th>OE</th>
+                            <th>HT OE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="mo-row">
+                            <td class="team-label">基準值</td>
+                            <td>
+                                <label><input type="checkbox" id="h-fthdp"> H</label><br>
+                                <input type="number" id="mo-fthdp" value="-8.3" class="input-mo" step="0.1">
+                            </td>
+                            <td>
+                                <input type="number" id="mo-ftou" value="-8.3" class="input-mo" step="0.1">
+                            </td>
+                            <td>
+                                <label><input type="checkbox" id="h-hthdp" checked> H</label><br>
+                                <input type="number" id="mo-hthdp" value="-6" class="input-mo" step="0.1">
+                            </td>
+                            <td>
+                                <input type="number" id="mo-htou" value="-6" class="input-mo" step="0.1">
+                            </td>
+                            <td>
+                                <input type="number" id="mo-oe" value="-8.3" class="input-mo" step="0.1">
+                            </td>
+                            <td>
+                                <input type="number" id="mo-htoe" value="-8.3" class="input-mo" step="0.1">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 防抖動函數，避免過於頻繁的計算
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 顯示更新指示器
+        function showUpdateIndicator() {
+            const indicator = document.getElementById('update-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 1000);
+        }
+
+        // 賠率轉換函數
+        function convertOdds(baseOdds, format, spread, parlayDiff) {
+            const base = parseFloat(baseOdds);
+            const spreadVal = parseFloat(spread) / 100;
+            const parlayVal = parseFloat(parlayDiff);
+            
+            // 基本計算邏輯 (簡化版本)
+            const adjustedOdds = base + (base * spreadVal);
+            const upperOdds = adjustedOdds + parlayVal;
+            const lowerOdds = adjustedOdds - parlayVal;
+            
+            switch(format) {
+                case 'MY':
+                    return {
+                        upper: (upperOdds > 0 ? upperOdds : upperOdds).toFixed(2),
+                        lower: (lowerOdds > 0 ? lowerOdds : lowerOdds).toFixed(2)
+                    };
+                case 'HK':
+                    return {
+                        upper: Math.abs(upperOdds + 1).toFixed(2),
+                        lower: Math.abs(lowerOdds).toFixed(2)
+                    };
+                case 'DEC':
+                    return {
+                        upper: (Math.abs(upperOdds) + 2).toFixed(2),
+                        lower: (Math.abs(lowerOdds) + 1.5).toFixed(2)
+                    };
+                case 'ID':
+                    return {
+                        upper: (upperOdds + 1).toFixed(2),
+                        lower: (lowerOdds - 0.2).toFixed(2)
+                    };
+                case 'US':
+                    const usUpper = upperOdds > 0 ? Math.round(upperOdds * 100) : Math.round(upperOdds * 100);
+                    const usLower = lowerOdds > 0 ? Math.round(lowerOdds * 100) : Math.round(lowerOdds * 100);
+                    return {
+                        upper: usUpper.toString(),
+                        lower: usLower.toString()
+                    };
+                case 'MP':
+                    return {
+                        upper: (Math.abs(upperOdds) + 2).toFixed(3),
+                        lower: (Math.abs(lowerOdds) + 1.5).toFixed(3)
+                    };
+                default:
+                    return { upper: '0.00', lower: '0.00' };
+            }
+        }
+
+        function calculateOdds() {
+            const formats = ['MY', 'HK', 'DEC', 'ID', 'US', 'MP'];
+            const markets = ['fthdp', 'ftou', 'hthdp', 'htou', 'oe', 'htoe'];
+            
+            formats.forEach(format => {
+                markets.forEach(market => {
+                    const moValue = parseFloat(document.getElementById(`mo-${market}`).value) || 0;
+                    const spread = parseFloat(document.getElementById(`spread-${market}`).value) || 10;
+                    const parlay = parseFloat(document.getElementById(`parlay-${market}`).value) || 0.04;
+                    
+                    const odds = convertOdds(moValue, format, spread, parlay);
+                    const cellId = `${format.toLowerCase()}-${market}`;
+                    const cell = document.getElementById(cellId);
+                    
+                    if (cell) {
+                        cell.innerHTML = `
+                            <span class="odds-up diamond">${odds.upper}♦</span><br>
+                            <span class="odds-down">${odds.lower}</span>
+                        `;
+                    }
+                });
+            });
+            
+            showUpdateIndicator();
+        }
+
+        function resetValues() {
+            // 重置 Match Profile 的值
+            const markets = ['fthdp', 'ftou', 'hthdp', 'htou', 'oe', 'htoe'];
+            markets.forEach(market => {
+                document.getElementById(`spread-${market}`).value = '10';
+                document.getElementById(`parlay-${market}`).value = '0.04';
+            });
+            
+            // 重置 MO Web 的值
+            document.getElementById('mo-fthdp').value = '-8.3';
+            document.getElementById('mo-ftou').value = '-8.3';
+            document.getElementById('mo-hthdp').value = '-6';
+            document.getElementById('mo-htou').value = '-6';
+            document.getElementById('mo-oe').value = '-8.3';
+            document.getElementById('mo-htoe').value = '-8.3';
+            
+            // 重置 H 指示器
+            document.getElementById('h-fthdp').checked = false;
+            document.getElementById('h-hthdp').checked = true;
+            
+            // 重新計算
+            calculateOdds();
+        }
+
+        // 創建防抖動版本的計算函數
+        const debouncedCalculateOdds = debounce(calculateOdds, 300);
+
+        // 初始化事件監聽器
+        function initializeEventListeners() {
+            // 獲取所有相關的輸入元素
+            const inputElements = document.querySelectorAll(
+                'input[type="number"], input[type="checkbox"]'
+            );
+            
+            // 為每個輸入元素添加事件監聽器
+            inputElements.forEach(element => {
+                // 監聽 input 事件（即時輸入）
+                element.addEventListener('input', debouncedCalculateOdds);
+                
+                // 監聽 change 事件（值改變）
+                element.addEventListener('change', calculateOdds);
+                
+                // 監聽 keyup 事件（鍵盤輸入）
+                element.addEventListener('keyup', debouncedCalculateOdds);
+                
+                // 對於 checkbox，額外監聽 click 事件
+                if (element.type === 'checkbox') {
+                    element.addEventListener('click', calculateOdds);
+                }
+            });
+        }
+
+        // 頁面載入時執行初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            calculateOdds();
+        });
+
+        // 確保頁面完全載入後也執行一次
+        window.addEventListener('load', function() {
+            calculateOdds();
+        });
+
+        // 監聽頁面焦點變化，確保數據同步
+        window.addEventListener('focus', function() {
+            calculateOdds();
+        });
+    </script>
+</body>
+</html>

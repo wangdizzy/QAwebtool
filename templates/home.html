@@ -9,12 +9,12 @@
     <div class="card">
         <div class="card-header">
             <p style="font-family:微軟正黑體;font-size:16pt ;font-weight: bold;">
-                <a href="/post/{{post.slug}}">{{post.title}}</a>
+                <h4>{{post.title}}</h4>
             </p>
         </div>
         <div class="card-body" style="background-color: #ffffdd;">
             <p>
-                {{post.body | truncatechars:20}}
+                {{post.body}}
             </p>
         </div>
         <div class="card-footer" style="background-color: #efefef;">

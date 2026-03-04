@@ -24,9 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-o@0zr&im(zkt20sfsb$oy6q)j5tz$nq*%&9kv6!tm&0xid0io_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = False
+
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'home',
+    'uploadexcel'
 ]
 
 MIDDLEWARE = [
@@ -57,6 +60,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR, 'static'
 ]
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 TEMPLATES = [
     {

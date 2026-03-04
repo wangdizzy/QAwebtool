@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from home.views import homepage, showpost, ppsg, upload, ppsgFunctionSelection, admin_function, oddsConversion
+from home.views import homepage, showpost, upload, oddsConversion
+from gamecheck.views import ppsgFunctionSelection, report_function
+from home.views import ppsg
+from uploadexcel.views import upload_excel
+from checkWebFunction.views import test
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +28,8 @@ urlpatterns = [
     path('game/', ppsg),
     path('upload/', upload),
     path('ppsgFunctionSelection/', ppsgFunctionSelection),
-    path('adminfunction/', admin_function),
-    path('oddsconversion/', oddsConversion)
+    path('adminfunction/', report_function),
+    path('oddsconversion/', oddsConversion),
+    path('uploadExcel/', upload_excel),
+    path('checkweb/', test)
 ]
