@@ -7,3 +7,4 @@ Pillow==12.1.1
 pytesseract==0.3.8
 selenium==4.41.0
 webdriver_manager==4.0.2
+gunicorn
