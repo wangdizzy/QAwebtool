@@ -205,7 +205,7 @@ def open_url(url):
     options.add_argument("--disable-dev-shm-usage")  # 防止記憶體不足崩潰
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")  # 取代 maximize_window() 
-    options.binary_location = "/usr/bin/google-chrome"
+    options.binary_location = "/usr/bin/chromium"
     
     service = Service(executable_path="/usr/bin/chromedriver")
     
