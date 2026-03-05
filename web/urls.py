@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from home.views import homepage, showpost, upload, oddsConversion
 from gamecheck.views import ppsgFunctionSelection, report_function
-from home.views import ppsg
+from home.views import ppsg, check_paths
 from uploadexcel.views import upload_excel
 from checkWebFunction.views import test
 
@@ -31,5 +31,6 @@ urlpatterns = [
     path('adminfunction/', report_function),
     path('oddsconversion/', oddsConversion),
     path('uploadExcel/', upload_excel),
+    path('check-paths/', check_paths),
     path('checkweb/', test)
 ]

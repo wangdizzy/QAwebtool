@@ -319,6 +319,16 @@ def img(element):
 def oddsConversion(requset):
     return render(requset, "oddsConversion.html")
 
+import subprocess
+def check_paths(request):
+    chromium = subprocess.run(["which", "chromium"], capture_output=True, text=True).stdout.strip()
+    chromedriver = subprocess.run(["which", "chromedriver"], capture_output=True, text=True).stdout.strip()
+    return JsonResponse({
+        "chromium": chromium,
+        "chromedriver": chromedriver
+    })
+
+
 
 if __name__ == "__main__":
     upload()
