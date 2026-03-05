@@ -207,11 +207,11 @@ def open_url(url):
     options.add_argument("--window-size=1920,1080")  # 取代 maximize_window()
     
     
-    chromium_path = get_binary_path("chromium")
-    chromedriver_path = get_binary_path("chromedriver")
+    chromium_path = find_binary("chromium")
+    chromedriver_path = find_binary("chromedriver")
     
-    service = Service(executable_path="/run/current-system/sw/bin/chromedriver")
-    options.binary_location = "/run/current-system/sw/bin/chromium"
+    service = Service(executable_path=chromedriver_path)
+    options.binary_location = chromium_path
     
     chromeWeb = webdriver.Chrome(service=service, options=options)
     #chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
@@ -333,15 +333,17 @@ def check_paths(request):
     })
 
 import subprocess
-def get_binary_path(name):
-    # 多個可能的路徑逐一嘗試
-    result = subprocess.run(["find", "/nix", "-name", name, "-type", "f"], 
-                          capture_output=True, text=True).stdout.strip()
-    paths = result.split("\n")
-    for p in paths:
-        if p and name in p:
-            return p
+import os
+def find_binary(name):
+    result = subprocess.run(
+        ["find", "/nix", "-name", name, "-type", "f"],
+        capture_output=True, text=True, timeout=10
+    ).stdout.strip()
+    for path in result.split("\n"):
+        if path and os.path.isfile(path):
+            return path
     return None
+
 
 if __name__ == "__main__":
     upload()
