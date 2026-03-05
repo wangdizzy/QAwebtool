@@ -56,9 +56,7 @@
                     window.location.href = '/ppsgFunctionSelection/';
                 },
                 error: function(xhr, status, error){
-                    alert("上傳失敗，請重新上傳!")
                     console.log(error);
-                    alert("上傳失敗：" + (xhr.responseJSON?.error || "未知錯誤"));
                 }
             });
         }
