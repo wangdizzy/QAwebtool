@@ -68,13 +68,8 @@ def upload(request):
         environment = request.POST.get("environment")
         website = request.POST.get("website")
         uploaded_file = request.FILES.getlist("excelFile")  # 獲取上傳的檔案
-        try:
-            parameters(website, environment, account, pswd)
-        except Exception as e:
-            # 把錯誤訊息回傳，這樣前端和 Railway Logs 都能看到
-            import traceback
-            print(traceback.format_exc())
-            return JsonResponse({"error": str(e)}, status=500)
+        
+        parameters(website, environment, account, pswd)
         
         # 將資訊存入 session
         request.session['game'] = game
