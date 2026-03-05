@@ -204,14 +204,10 @@ def open_url(url):
     options.add_argument("--no-sandbox")          # Railway 必須加
     options.add_argument("--disable-dev-shm-usage")  # 防止記憶體不足崩潰
     options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")  # 取代 maximize_window()
+    options.add_argument("--window-size=1920,1080")  # 取代 maximize_window() 
+    options.binary_location = "/usr/bin/google-chrome"
     
-    
-    chromium_path = find_binary("chromium")
-    chromedriver_path = find_binary("chromedriver")
-    
-    service = Service(executable_path=chromedriver_path)
-    options.binary_location = chromium_path
+    service = Service(executable_path="/usr/bin/chromedriver")
     
     chromeWeb = webdriver.Chrome(service=service, options=options)
     #chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
@@ -330,37 +326,6 @@ def check_paths(request):
     return JsonResponse({
         "chromium": chromium,
         "chromedriver": chromedriver
-    })
-
-import subprocess
-import os
-def find_binary(name):
-    result = subprocess.run(
-        ["find", "/nix", "-name", name, "-type", "f"],
-        capture_output=True, text=True, timeout=10
-    ).stdout.strip()
-    for path in result.split("\n"):
-        if path and os.path.isfile(path):
-            return path
-    return None
-
-def check_paths(request):
-    import subprocess
-    
-    # 搜尋所有可能的 chrome/chromium 執行檔
-    find_chrome = subprocess.run(
-        ["find", "/", "-name", "chrom*", "-type", "f", "-not", "-path", "*/proc/*"],
-        capture_output=True, text=True, timeout=30
-    ).stdout.strip()
-    
-    find_driver = subprocess.run(
-        ["find", "/", "-name", "chromedriver*", "-type", "f", "-not", "-path", "*/proc/*"],
-        capture_output=True, text=True, timeout=30
-    ).stdout.strip()
-
-    return JsonResponse({
-        "chrome_files": find_chrome.split("\n"),
-        "driver_files": find_driver.split("\n"),
     })
 
 

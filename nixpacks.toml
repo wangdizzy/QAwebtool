@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["google-chrome", "chromedriver", "tesseract"]
+nixPkgs = ["chromium", "tesseract"]
 
-[phases.build]
-cmds = ["which chromium || echo 'chromium not found'", "which chromedriver || echo 'chromedriver not found'"]
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
