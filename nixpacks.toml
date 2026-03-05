@@ -1,5 +1,0 @@
-[phases.setup]
-nixPkgs = ["chromium", "tesseract"]
-
-[phases.install]
-cmds = ["pip install -r requirements.txt"]

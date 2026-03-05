@@ -199,20 +199,9 @@ def handle_prod(account, pswd, url):
 def open_url(url):
     global chromeWeb
     
-    options = Options()
-    options.add_argument("--headless")           # Railway 沒有畫面，必須加
-    options.add_argument("--no-sandbox")          # Railway 必須加
-    options.add_argument("--disable-dev-shm-usage")  # 防止記憶體不足崩潰
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")  # 取代 maximize_window() 
-    options.binary_location = "/usr/bin/chromium"
-    
-    service = Service(executable_path="/usr/bin/chromedriver")
-    
-    chromeWeb = webdriver.Chrome(service=service, options=options)
-    #chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    chromeWeb = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
 
-    #chromeWeb.maximize_window()
+    chromeWeb.maximize_window()
     chromeWeb.get(url)
 
 
@@ -318,15 +307,6 @@ def img(element):
 
 def oddsConversion(requset):
     return render(requset, "oddsConversion.html")
-
-import subprocess
-def check_paths(request):
-    chromium = subprocess.run(["which", "chromium"], capture_output=True, text=True).stdout.strip()
-    chromedriver = subprocess.run(["which", "chromedriver"], capture_output=True, text=True).stdout.strip()
-    return JsonResponse({
-        "chromium": chromium,
-        "chromedriver": chromedriver
-    })
 
 
 if __name__ == "__main__":
