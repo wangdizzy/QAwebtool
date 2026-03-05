@@ -1,2 +1,5 @@
 [phases.setup]
-nixPkgs = ["chromium", "chromedriver", "tesseract"]
+nixPkgs = ["chromium", "chromedriver", "tesseract", "which"]
+
+[phases.build]
+cmds = ["which chromium || echo 'chromium not found'", "which chromedriver || echo 'chromedriver not found'"]

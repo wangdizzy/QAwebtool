@@ -206,6 +206,10 @@ def open_url(url):
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")  # 取代 maximize_window()
     
+    
+    chromium_path = get_binary_path("chromium")
+    chromedriver_path = get_binary_path("chromedriver")
+    
     service = Service(executable_path="/run/current-system/sw/bin/chromedriver")
     options.binary_location = "/run/current-system/sw/bin/chromium"
     
@@ -328,7 +332,16 @@ def check_paths(request):
         "chromedriver": chromedriver
     })
 
-
+import subprocess
+def get_binary_path(name):
+    # 多個可能的路徑逐一嘗試
+    result = subprocess.run(["find", "/nix", "-name", name, "-type", "f"], 
+                          capture_output=True, text=True).stdout.strip()
+    paths = result.split("\n")
+    for p in paths:
+        if p and name in p:
+            return p
+    return None
 
 if __name__ == "__main__":
     upload()
