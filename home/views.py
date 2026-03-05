@@ -344,6 +344,25 @@ def find_binary(name):
             return path
     return None
 
+def check_paths(request):
+    import subprocess
+    
+    # 搜尋所有可能的 chrome/chromium 執行檔
+    find_chrome = subprocess.run(
+        ["find", "/", "-name", "chrom*", "-type", "f", "-not", "-path", "*/proc/*"],
+        capture_output=True, text=True, timeout=30
+    ).stdout.strip()
+    
+    find_driver = subprocess.run(
+        ["find", "/", "-name", "chromedriver*", "-type", "f", "-not", "-path", "*/proc/*"],
+        capture_output=True, text=True, timeout=30
+    ).stdout.strip()
+
+    return JsonResponse({
+        "chrome_files": find_chrome.split("\n"),
+        "driver_files": find_driver.split("\n"),
+    })
+
 
 if __name__ == "__main__":
     upload()
